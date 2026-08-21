@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spirit Box Tool</title>
+  <style>
+    /* Default Purple Theme */
+    :root {
+      --bg-color: #080007;
+      --card-bg: #1c0218;
+      --primary: #bf00ff;
+      --primary-light: #e600e6;
+      --text-color: #ffffff;
+      --subtext: #a0a0a0;
+      --border-color: #d900ff;
+    }
+
+    /* Cyan Theme */
+    body.theme-cyan {
+      --bg-color: #000b0e;
+      --card-bg: #011d24;
+      --primary: #00e5ff;
+      --primary-light: #80f2ff;
+      --border-color: #00e5ff;
+    }
+
+    /* rainbow theme */
+    body. theme-rainbow {
+      --bg-color: #0d0a12;
+      --card-bg: #1a1524;
+      --primary:#e8baff;
+      --primary-light:#bae1ff;
+      --border-color:#ffb3ba;
+
+    }
+    
+
+    /* Red Theme */
+    body.theme-red {
+      --bg-color: #0e0000;
+      --card-bg: #240101;
+      --primary: #ff0055;
+      --primary-light: #ff6699;
+      --border-color: #ff0055;
+    }
+
+    /* Pink Theme */
+    body.theme-pink {
+      --bg-color: #12000e;
+      --card-bg: #3a002c;
+      --primary: #ff5cde;
+      --primary-light: #ff99dd;
+      --border-color: #ff5cde;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    #ghost-icon {
+      width: 80px;
+      height: 80px;
+      filter: drop-shadow(0 0 12px var(--primary));
+      transition: transform 0.2s ease, filter 0.2s ease;
+      margin-bottom: 12px;
+    }
+
+    #word-display {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--primary-light);
+      margin: 10px 0;
+      min-height: 60px;
+      transition: color 0.3s ease;
+    }
+
+    #time-display {
+      font-size: 0.85rem;
+      color: var(--subtext);
+    }
+
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+
+    .sensor-card {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    button {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+      opacity: 0.8;
+    }
+
+    .btn-main {
+      grid-column: span 2;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1.1rem;
+      padding: 16px;
+      border: none;
+      box-shadow: 0 0 15px var(--primary);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .log-container {
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .log-entry {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      padding: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .setting-row {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      gap: 4px;
+      font-size: 0.85rem;
+    }
+
+    input[type="range"], textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      padding: 8px;
+    }
+
+    .swatch-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .swatch {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .swatch.active { border-color: #fff; }
+    .swatch-purple { background: #bf00ff; }
+    .swatch-cyan { background: #00e5ff; }
+    .swatch-red { background: #ff0055; }
+    .swatch-pink { background: #ff5cde; }
+    .swatch-rainbow {background:#e8baff; }
+  </style>
+  <meta name="theme-color" content="#bf00ff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h2>SPIRIT BOX</h2>
+      <span class="badge" id="status-badge">STANDBY</span>
+    </header>
+
+    <div class="card">
+      <svg id="ghost-icon" viewBox="0 0 512 512">
+        <path fill="var(--primary-light)" d="M 256,120 C 180,120 160,170 160,250 C 160,310 130,336 130,380 C 130,410 160,420 175,400 C 190,380 205,380 220,400 C 235,420 250,420 265,400 C 280,380 295,380 310,400 C 325,420 355,410 355,380 C 355,336 325,310 325,250 C 325,170 305,120 256,120 Z" />
+        <ellipse cx="220" cy="220" rx="14" ry="24" fill="var(--card-bg)" />
+        <ellipse cx="292" cy="220" rx="14" ry="24" fill="var(--card-bg)" />
+        <circle cx="215" cy="210" r="5" fill="#ffffff" />
+        <circle cx="287" cy="210" r="5" fill="#ffffff" />
+        <ellipse cx="256" cy="270" rx="12" ry="18" fill="var(--card-bg)" />
+      </svg>
+      <div id="word-display">---</div>
+      <div id="time-display">AWAITING TRIGGER</div>
+    </div>
+
+    <div class="sensor-grid">
+      <div class="sensor-card" id="emf-data">EMF: 0 µT</div>
+      <div class="sensor-card" id="motion-data">Motion: 0</div>
+      <div class="sensor-card" id="mic-data">Mic: 0 dB</div>
+    </div>
+
+    <div class="controls-grid">
+      <button class="btn-main" id="btn-scan">START SCAN</button>
+      <button id="btn-emf">ENABLE EMF</button>
+      <button id="btn-torch">FLASH LIGHT</button>
+      <button id="btn-motion">MOTION SENSOR</button>
+      <button id="btn-mic">AUDIO MIC</button>
+      <button id="btn-settings" style="grid-column: span 2;">SETTINGS</button>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size: 0.9rem; margin-bottom: 8px; width: 100%; text-align: left;">EVENT LOG</h3>
+      <div class="log-container" id="log-list">
+        <div class="log-entry" style="color: var(--subtext);">No readings recorded...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settings-modal">
+    <div class="modal-content">
+      <h3>Settings</h3>
+
+      <div class="setting-row">
+        <label>Theme</label>
+        <div class="swatch-group">
+          <div class="swatch swatch-purple active" data-theme="purple"></div>
+          <div class="swatch swatch-cyan" data-theme="cyan"></div>
+          <div class="swatch swatch-red" data-theme="red"></div>
+          <div class="swatch swatch-rainbow" data-theme="rainbow"></div>
+          <div class="swatch swatch-pink" data-theme="pink"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label>EMF Threshold Trigger: <span id="cfg-emf-val">45 µT</span></label>
+        <input type="range" id="cfg-emf" min="20" max="150" value="45">
+      </div>
+
+      <div class="setting-row">
+        <label>Voice Pitch: <span id="cfg-pitch-val">0.6</span></label>
+        <input type="range" id="cfg-pitch" min="0.1" max="1.5" step="0.1" value="0.6">
+      </div>
+
+      <div class="setting-row">
+        <label>Vibration</label>
+        <button id="btn-toggle-vibe">ENABLED</button>
+      </div>
+
+      <div class="setting-row">
+        <label>Audio Speech</label>
+        <button id="btn-toggle-audio">ENABLED</button>
+      </div>
+
+      <div class="setting-row">
+        <label>Word Bank </label>
+        <textarea id="cfg-dictionary" rows="4"></textarea>
+      </div>
+
+      <button id="btn-close-settings" style="margin-top: 10px;">SAVE & CLOSE</button>
+    </div>
+  </div>
+
+  <script>
+    let dictionary = [
+      "HERE", "BEHIND", "LISTEN", "COLD", "DARK", "SHADOW", "HELP", 
+      "RUN", "AWAKE", "FOUND", "SPIRIT", "GHOST", "ECHO", "WATCHING",
+      "SOUL", "ENERGY", "VOICE", "FEAR", "LIGHT", "NEAR", "ALWAYS"
+    ];
+
+    const btnScan = document.getElementById('btn-scan');
+    const btnSettings = document.getElementById('btn-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    const settingsModal = document.getElementById('settings-modal');
+
+    const btnEmf = document.getElementById('btn-emf');
+    const btnTorch = document.getElementById('btn-torch');
+    const btnMotion = document.getElementById('btn-motion');
+    const btnMic = document.getElementById('btn-mic');
+    const btnToggleVibe = document.getElementById('btn-toggle-vibe');
+    const btnToggleAudio = document.getElementById('btn-toggle-audio');
+
+    const statusBadge = document.getElementById('status-badge');
+    const wordDisplay = document.getElementById('word-display');
+    const timeDisplay = document.getElementById('time-display');
+    const logList = document.getElementById('log-list');
+    const ghostIcon = document.getElementById('ghost-icon');
+
+    const emfData = document.getElementById('emf-data');
+    const motionData = document.getElementById('motion-data');
+    const micData = document.getElementById('mic-data');
+
+    const cfgEmf = document.getElementById('cfg-emf');
+    const cfgEmfVal = document.getElementById('cfg-emf-val');
+    const cfgPitch = document.getElementById('cfg-pitch');
+    const cfgPitchVal = document.getElementById('cfg-pitch-val');
+    const cfgDictionary = document.getElementById('cfg-dictionary');
+
+    let isScanning = false;
+    let wakeLock = null;
+    let torchTrack = null;
+    let isTorchOn = false;
+    let enableVibration = true;
+    let enableAudio = true;
+    let magnetometer = null;
+    let lastEmfTrigger = 0;
+
+    cfgDictionary.value = dictionary.join(", ");
+
+    // Handle theme switching
+    const swatches = document.querySelectorAll('.swatch');
+    swatches.forEach(swatch => {
+      swatch.addEventListener('click', (e) => {
+        swatches.forEach(s => s.classList.remove('active'));
+        e.target.classList.add('active');
+
+        const theme = e.target.getAttribute('data-theme');
+        document.body.className = '';
+        if (theme && theme !== 'purple') {
+          document.body.classList.add('theme-' + theme);
+        }
+      });
+    });
+
+    btnSettings.addEventListener('click', () => settingsModal.classList.add('active'));
+    btnCloseSettings.addEventListener('click', () => {
+      settingsModal.classList.remove('active');
+      dictionary = cfgDictionary.value.split(',').map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+    });
+
+    cfgEmf.addEventListener('input', (e) => { cfgEmfVal.innerText = e.target.value + ' µT'; });
+    cfgPitch.addEventListener('input', (e) => { cfgPitchVal.innerText = e.target.value; });
+
+    btnToggleVibe.addEventListener('click', () => {
+      enableVibration = !enableVibration;
+      btnToggleVibe.innerText = enableVibration ? "ENABLED" : "DISABLED";
+    });
+
+    btnToggleAudio.addEventListener('click', () => {
+      enableAudio = !enableAudio;
+      btnToggleAudio.innerText = enableAudio ? "ENABLED" : "DISABLED";
+      if (!enableAudio && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    });
+
+    function speakWord(text) {
+      if (!enableAudio || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text.toLowerCase());
+      utterance.pitch = parseFloat(cfgPitch.value);
+      utterance.rate = 0.8;
+      utterance.volume = 1.0;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+      } catch (err) { console.warn(err.message); }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock !== null) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+    }
+
+    // Word trigger function — ONLY called when EMF magnetic threshold is reached
+    function triggerReading() {
+      if (enableVibration && "vibrate" in navigator) navigator.vibrate([100, 50, 100]);
+
+      const randomWord = dictionary[Math.floor(Math.random() * dictionary.length)] || "ECHO";
+      const now = new Date();
+      const timeString = now.toTimeString().split(' ')[0];
+
+      wordDisplay.innerText = randomWord;
+      timeDisplay.innerText = 'EMF SPIKE AT ' + timeString;
+      
+      speakWord(randomWord);
+
+      ghostIcon.style.transform = 'scale(1.15)';
+      ghostIcon.style.filter = 'drop-shadow(0 0 20px var(--primary-light))';
+
+      setTimeout(() => {
+        ghostIcon.style.transform = 'scale(1)';
+        ghostIcon.style.filter = 'drop-shadow(0 0 12px var(--primary))';
+      }, 300);
+
+      addLogEntry(randomWord, timeString);
+    }
+
+    function addLogEntry(word, timeStr) {
+      if (logList.children.length === 1 && logList.children[0].innerText.includes('No readings')) {
+        logList.innerHTML = '';
+      }
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = '<strong>' + word + '</strong> <span>' + timeStr + '</span>';
+      logList.prepend(entry);
+    }
+
+    // Master Scan Toggle
+    btnScan.addEventListener('click', async () => {
+      isScanning = !isScanning;
+
+      if (isScanning) {
+        await requestWakeLock();
+        btnScan.innerText = 'STOP SCAN';
+        statusBadge.innerText = 'MONITORING EMF...';
+        wordDisplay.innerText = 'WAITING FOR SPIKE';
+        timeDisplay.innerText = 'SCANNING MAGNETIC FIELD';
+      } else {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        releaseWakeLock();
+        btnScan.innerText = 'START SCAN';
+        statusBadge.innerText = 'STANDBY';
+        wordDisplay.innerText = '---';
+        timeDisplay.innerText = 'SWEEP STOPPED';
+      }
+    });
+
+    // EMF Sensor Listener (Main Trigger)
+    btnEmf.addEventListener('click', async () => {
+      if ('Magnetometer' in window) {
+        try {
+          if (navigator.permissions) {
+            const result = await navigator.permissions.query({ name: 'magnetometer' });
+            if (result.state === 'denied') {
+              alert("Magnetometer permission denied.");
+              return;
+            }
+          }
+
+          magnetometer = new Magnetometer({ frequency: 10 });
+          magnetometer.addEventListener('reading', () => {
+            const totalEMF = Math.sqrt(magnetometer.x**2 + magnetometer.y**2 + magnetometer.z**2).toFixed(1);
+            emfData.innerText = 'EMF: ' + totalEMF + ' µT';
+
+            const emfThreshold = parseInt(cfgEmf.value, 10);
+            const now = Date.now();
+
+            // WORDS ONLY POP UP HERE WHEN MAGNETIC THRESHOLD IS TRIGGERED
+            if (totalEMF > emfThreshold && isScanning && (now - lastEmfTrigger > 1500)) {
+              lastEmfTrigger = now;
+              triggerReading();
+            }
+          });
+
+          magnetometer.start();
+          btnEmf.innerText = "EMF ACTIVE";
+        } catch (err) {
+          alert("EMF Error: " + err.message);
+        }
+      } else {
+        alert("Magnetometer API not supported on this browser/device.");
+      }
+    });
+
+    btnTorch.addEventListener('click', async () => {
+      try {
+        if (!torchTrack) {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          torchTrack = stream.getVideoTracks()[0];
+        }
+        const capabilities = torchTrack.getCapabilities();
+        if (capabilities.torch) {
+          isTorchOn = !isTorchOn;
+          await torchTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] });
+          btnTorch.innerText = isTorchOn ? "LIGHT ON" : "FLASH LIGHT";
+        } else {
+          alert("Flashlight / Torch not supported on this device.");
+        }
+      } catch (err) { alert("Flashlight error: " + err.message); }
+    });
+
+    btnMotion.addEventListener('click', () => {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission().then(response => {
+          if (response === 'granted') {
+            window.addEventListener('devicemotion', handleMotion);
+            btnMotion.innerText = "MOTION ON";
+          }
+        });
+      } else if ('DeviceMotionEvent' in window) {
+        window.addEventListener('devicemotion', handleMotion);
+        btnMotion.innerText = "MOTION ON";
+      } else {
+        alert("Motion sensors not supported.");
+      }
+    });
+
+    function handleMotion(event) {
+      const acc = event.accelerationIncludingGravity;
+      if (acc) motionData.innerText = 'X:' + (acc.x ? acc.x.toFixed(1) : 0) + ' Y:' + (acc.y ? acc.y.toFixed(1) : 0);
+    }
+
+    btnMic.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        const micCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = micCtx.createAnalyser();
+        const source = micCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        btnMic.innerText = "MIC ACTIVE";
+
+        function updateMicLevel() {
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for(let i = 0; i < dataArray.length; i++) { sum += dataArray[i]; }
+          let average = Math.round(sum / dataArray.length);
+          
+          micData.innerText = 'Mic: ' + average + ' dB';
+          requestAnimationFrame(updateMicLevel);
+        }
+        updateMicLevel();
+      } catch (err) { alert("Microphone access denied: " + err.message); }
+    });
+  </script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+}
+</script>
+</body>
+</html>
